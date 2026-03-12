@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Homeduino Scanner</title>
+    <style>
+        body { font-family: sans-serif; background-color: #f0f2f5; margin: 0; padding: 20px; }
+        .container { max-width: 800px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        h1 { color: #03a9f4; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        .signal-list { list-style: none; padding: 0; }
+        .signal-item { border-bottom: 1px solid #eee; padding: 10px 0; display: flex; flex-direction: column; }
+        .signal-item:last-child { border-bottom: none; }
+        .timestamp { font-size: 0.8em; color: #888; }
+        .protocol { font-weight: bold; color: #d32f2f; margin-right: 10px; }
+        .values { font-family: monospace; background: #f9f9f9; padding: 5px; border-radius: 4px; margin-top: 5px; word-break: break-all; }
+        .raw { color: #7b1fa2; font-style: italic; }
+        .status { margin-bottom: 20px; padding: 10px; border-radius: 4px; }
+        .status.connected { background: #e8f5e9; color: #2e7d32; }
+        .status.disconnected { background: #ffebee; color: #c62828; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Homeduino 433MHz Scanner</h1>
+        <div id="status" class="status disconnected">Disconnected from Bridge</div>
+        
+        <div class="controls">
+            <button onclick="clearSignals()">Clear List</button>
+        </div>
+
+        <ul id="signals" class="signal-list">
+            <!-- Signals will appear here -->
+        </ul>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+        const signalsList = document.getElementById('signals');
+        const statusDiv = document.getElementById('status');
+
+        socket.on('connect', () => {
+            statusDiv.textContent = 'Connected to Bridge - Listening for signals...';
+            statusDiv.className = 'status connected';
+        });
+
+        socket.on('disconnect', () => {
+            statusDiv.textContent = 'Disconnected from Bridge';
+            statusDiv.className = 'status disconnected';
+        });
+
+        socket.on('signal', (data) => {
+            addSignal(data);
+        });
+
+        socket.on('raw', (data) => {
+            // Optional: show raw signals too
+            // addRaw(data);
+        });
+
+        function addSignal(data) {
+            const li = document.createElement('li');
+            li.className = 'signal-item';
+            
+            const time = new Date(data.timestamp).toLocaleTimeString();
+            const valuesStr = JSON.stringify(data.values, null, 2);
+            
+            li.innerHTML = `
+                <div>
+                    <span class="timestamp">${time}</span>
+                    <span class="protocol">[${data.protocol}]</span>
+                </div>
+                <div class="values">${valuesStr}</div>
+            `;
+            
+            signalsList.prepend(li);
+            
+            // Limit to 50 items
+            while (signalsList.children.length > 50) {
+                signalsList.removeChild(signalsList.lastChild);
+            }
+        }
+
+        function clearSignals() {
+            signalsList.innerHTML = '';
+        }
+    </script>
+</body>
+</html>

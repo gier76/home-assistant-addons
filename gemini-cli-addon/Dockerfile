@@ -1,12 +1,20 @@
 ARG BUILD_FROM
 FROM $BUILD_FROM
 
-RUN apk add --no-cache nodejs npm ttyd bash curl git openssh
+# Install dependencies
+RUN apk add --no-cache \
+    nodejs \
+    npm \
+    ttyd \
+    bash \
+    curl \
+    git \
+    openssh
 
+# Install gemini-cli
 RUN npm install -g @google/gemini-cli
 
-WORKDIR /config
-
+# Copy data for add-on
 COPY run.sh /
 RUN chmod a+x /run.sh
 

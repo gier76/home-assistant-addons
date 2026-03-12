@@ -1,7 +1,8 @@
 name: "Gemini CLI"
 description: "Terminal mit gemini-cli"
-version: "1.0.0"
+version: "1.0.1"
 slug: "gemini_cli"
+init: true
 arch:
   - aarch64
   - amd64
